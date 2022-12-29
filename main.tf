@@ -7,6 +7,10 @@ provider "aws" {
 # Create a VPC
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    "Name" = "VPC-terraform"
+  }
 }
 
 # Create a subnet
@@ -14,6 +18,29 @@ resource "aws_vpc" "main" {
    vpc_id            = aws_vpc.main.id
    cidr_block        = "10.0.1.0/24"
    availability_zone = "us-east-1a"
+
+   tags = {
+     "Name" = "Sub-terraform"
+   }
+}
+
+# Internet gateway
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "IG-terraform"
+  }
+}
+
+# Route Table
+resource "aws_route_table" "RT" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.gw.id
+  }
 }
 
 # Create a security group
@@ -21,6 +48,10 @@ resource "aws_security_group" "ssh" {
   name        = "allow_ssh"
   description = "Allow SSH access"
   vpc_id      = aws_vpc.main.id
+
+  tags = {
+    "Name" = "SG-Terraform"
+  }
 
   ingress {
     from_port   = 22
@@ -68,6 +99,11 @@ resource "local_file" "private_key" {
 resource "aws_instance" "web" {
   ami           = "ami-0574da719dca65348"
   instance_type = "t2.micro"
+
+  tags = {
+    "Name" = "EC2-Terraform"
+  }
+  
   vpc_security_group_ids = [aws_security_group.ssh.id]
   subnet_id              = aws_subnet.public.id
 
