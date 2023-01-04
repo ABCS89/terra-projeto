@@ -5,49 +5,66 @@ provider "aws" {
 
 #------------------Network-----------------
 # Create a VPC
-resource "aws_vpc" "main" {
+resource "aws_vpc" "VPC_EC2" {
   cidr_block = "10.0.0.0/16"
+  enable_dns_hostnames = true
 
   tags = {
     "Name" = "VPC-terraform"
   }
 }
 
+#resource "aws_vpc_ipv4_cidr_block_association" "EC2" {
+#  vpc_id = aws_vpc.VPC_EC2.id
+#  cidr_block = "10.0.0.0/16"
+#}
+
 # Create a subnet
- resource "aws_subnet" "public" {
-   vpc_id            = aws_vpc.main.id
+ resource "aws_subnet" "subnet" {
+   vpc_id            = aws_vpc.VPC_EC2.id
    cidr_block        = "10.0.1.0/24"
    availability_zone = "us-east-1a"
+   map_public_ip_on_launch = true
 
    tags = {
-     "Name" = "Sub-terraform"
+     "Name" = "Public-Sub-terraform"
    }
 }
 
 # Internet gateway
 resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.VPC_EC2.id
 
   tags = {
-    Name = "IG-terraform"
+    "Name" = "IG-terraform"
   }
 }
 
-# Route Table
+# Create Route table
 resource "aws_route_table" "RT" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.VPC_EC2.id
 
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.gw.id
   }
+
+  tags = {
+    "Name" = "RT-terraform"
+  }
+}
+
+# Associate Subnet with Route table
+resource "aws_route_table_association" "Subnet-to-RT" {
+  subnet_id = aws_subnet.subnet.id
+  route_table_id = aws_route_table.RT.id
 }
 
 # Create a security group
-resource "aws_security_group" "ssh" {
+resource "aws_security_group" "SG" {
   name        = "allow_ssh"
   description = "Allow SSH access"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = aws_vpc.VPC_EC2.id
 
   tags = {
     "Name" = "SG-Terraform"
@@ -78,39 +95,45 @@ resource "aws_security_group" "ssh" {
 
 #---------------------Chave------------------
 variable "key_name" {default="chave"}
-resource "tls_private_key" "example" {
+#
+resource "tls_private_key" "chave" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
+
+# Create key pair
 resource "aws_key_pair" "generated_key" {
   key_name   = "${var.key_name}"
-  public_key = "${tls_private_key.example.public_key_openssh}"
+  public_key = "${tls_private_key.chave.public_key_openssh}"
 }
 
 # Save the private key to a file
 resource "local_file" "private_key" {
-  content  = tls_private_key.example.public_key_openssh
-  filename = "/home/andre/.ssh/chave.pem"
+  content  = tls_private_key.chave.public_key_openssh
+  filename = ("/home/andre/.ssh/chave.pem")
 }
 
 
 #------------------VM------------------------
 # Create an EC2 instance
-resource "aws_instance" "web" {
+resource "aws_instance" "EC2" {
   ami           = "ami-0574da719dca65348"
   instance_type = "t2.micro"
 
   tags = {
     "Name" = "EC2-Terraform"
   }
-  
-  vpc_security_group_ids = [aws_security_group.ssh.id]
-  subnet_id              = aws_subnet.public.id
+  vpc_security_group_ids = [aws_security_group.SG.id]
+  subnet_id              = aws_subnet.subnet.id
 
    # Assign a public IP address
   associate_public_ip_address = true
 
-
   # Add a key pair for SSH access
   key_name = "chave"
+}
+
+output "instance_public_ip" {
+  description = "Public IP address of the EC2 instance"
+  value       = aws_instance.EC2.public_ip
 }
