@@ -14,11 +14,6 @@ resource "aws_vpc" "VPC_EC2" {
   }
 }
 
-#resource "aws_vpc_ipv4_cidr_block_association" "EC2" {
-#  vpc_id = aws_vpc.VPC_EC2.id
-#  cidr_block = "10.0.0.0/16"
-#}
-
 # Create a subnet
  resource "aws_subnet" "subnet" {
    vpc_id            = aws_vpc.VPC_EC2.id
@@ -93,24 +88,12 @@ resource "aws_security_group" "SG" {
   }
 }
 
+
 #---------------------Chave------------------
-variable "key_name" {default="chave"}
-#
-resource "tls_private_key" "chave" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
 
-# Create key pair
-resource "aws_key_pair" "generated_key" {
-  key_name   = "${var.key_name}"
-  public_key = "${tls_private_key.chave.public_key_openssh}"
-}
-
-# Save the private key to a file
-resource "local_file" "private_key" {
-  content  = tls_private_key.chave.public_key_openssh
-  filename = ("/home/andre/.ssh/chave.pem")
+resource "aws_key_pair" "chave" {
+  key_name = "chave"
+  public_key = file("/home/andre/.ssh/chave.pub")
 }
 
 
@@ -125,6 +108,7 @@ resource "aws_instance" "EC2" {
   }
   vpc_security_group_ids = [aws_security_group.SG.id]
   subnet_id              = aws_subnet.subnet.id
+  security_groups        = [aws_security_group.SG.id]
 
    # Assign a public IP address
   associate_public_ip_address = true
