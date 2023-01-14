@@ -108,13 +108,28 @@ resource "aws_instance" "EC2" {
   }
   vpc_security_group_ids = [aws_security_group.SG.id]
   subnet_id              = aws_subnet.subnet.id
-  security_groups        = [aws_security_group.SG.id]
+#  security_groups        = [aws_security_group.SG.id]
 
    # Assign a public IP address
   associate_public_ip_address = true
 
   # Add a key pair for SSH access
   key_name = "chave"
+}
+
+
+resource "aws_s3_bucket" "S3" {
+  bucket = "simple-bucket-abcs89"
+
+  tags = {
+    Name        = "abcs89-s3"
+    Environment = "Projeto"
+  }
+}
+
+resource "aws_s3_bucket_acl" "s3_acl" {
+  bucket = aws_s3_bucket.S3.id
+  acl    = "private"
 }
 
 output "instance_public_ip" {
