@@ -3,7 +3,7 @@ provider "aws" {
   region = "us-east-1"
 }
 
-#------------------Network-----------------
+#------------------------Network-----------------------------
 # Create a VPC
 resource "aws_vpc" "VPC_EC2" {
   cidr_block = "10.0.0.0/16"
@@ -89,7 +89,7 @@ resource "aws_security_group" "SG" {
 }
 
 
-#---------------------Chave------------------
+#------------------------Chave---------------------------
 
 resource "aws_key_pair" "chave" {
   key_name = "chave"
@@ -97,7 +97,7 @@ resource "aws_key_pair" "chave" {
 }
 
 
-#------------------VM------------------------
+#------------------------VM------------------------------
 # Create an EC2 instance
 resource "aws_instance" "EC2" {
   ami           = "ami-0574da719dca65348"
@@ -117,9 +117,9 @@ resource "aws_instance" "EC2" {
   key_name = "chave"
 }
 
-
+#---------------------Bucket---------------------------
 resource "aws_s3_bucket" "S3" {
-  bucket = "simple-bucket-abcs89"
+  bucket = "elasticbeanstalk-us-east-1-204558000045"
 
   tags = {
     Name        = "abcs89-s3"
