@@ -89,7 +89,7 @@ resource "aws_security_group" "SG" {
 }
 
 
-#------------------------Chave---------------------------
+#------------------------Key---------------------------
 
 resource "aws_key_pair" "chave" {
   key_name = "chave"
