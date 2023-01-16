@@ -119,7 +119,7 @@ resource "aws_instance" "EC2" {
 
 #---------------------Bucket---------------------------
 resource "aws_s3_bucket" "S3" {
-  bucket = "elasticbeanstalk-us-east-1-204558000045"
+  bucket = "abcs89-test-bucket"
 
   tags = {
     Name        = "abcs89-s3"
