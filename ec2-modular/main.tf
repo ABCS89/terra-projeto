@@ -1,20 +1,12 @@
-terraform {
-    required_providers {
-      aws{
-        source  = "hashicorp/aws"
-        version = "~> 4.0"
-      }
-    }
-}
-
 provider "aws" {
-  region = "us-east-1"
+  region = var.region
+  profile = var.profile
 }
 
-module "vpc" {
-  source = "vpc"
+module "ec2" {
+  source = "./ec2"
 }
 
-module "s3" {
-  
-}
+# module "vpc" {
+#   source = "./network"
+# }
